@@ -30,6 +30,6 @@
     "CLAUDE_MODEL": "claude-sonnet-4-6",
     "KATE_EMAIL": "kate.abegg@coritasstrategies.com",
     "FROM_EMAIL": "intake@coritasstrategies.com",
-    "TURNSTILE_SITE_KEY": "REPLACE_WITH_PUBLIC_TURNSTILE_SITE_KEY"
+    "TURNSTILE_SITE_KEY": "0x4AAAAAADmq62Fcg646VlZP"
   }
 }
