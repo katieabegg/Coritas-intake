@@ -22,7 +22,7 @@ export const SERVICE_LANES: ServiceLane[] = [
     status: "active",
     scope: [
       "FEMA disaster / emergency management project work (national, no geographic limits)",
-      "Healthcare cyber resilience",
+      "Healthcare cyber resilience audit",
       "Township grant readiness → grant writing",
       "Community advocacy",
       "Homeowner mitigation audit",
@@ -37,6 +37,7 @@ export const SERVICE_LANES: ServiceLane[] = [
       "Strategic leadership advisory",
       "Bipartisan political project work (national)",
       "Policy advisory",
+      "Affordable housing feasibility & policy report",
       "Executive education",
     ],
   },

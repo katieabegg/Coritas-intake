@@ -78,14 +78,20 @@ export class LeadAgent extends BaseLeadAgent<Env> {
       draft += `\n\nGrab a time that works for you: ${SCHEDULER_PLACEHOLDER}`;
     }
 
+    const valueBand = band
+      ? band.scoped || band.low == null || band.high == null
+        ? "Scoped per engagement — value TBD"
+        : `$${band.low.toLocaleString()}–$${band.high.toLocaleString()} / ${band.unit}`
+      : null;
+
     return {
       anchor: v.anchor,
       lane: lane?.label ?? v.anchor,
       practice_area: band?.label ?? v.practice_area ?? null,
       buyer_type: v.buyer_type,
-      est_value_band: band ? `$${band.low.toLocaleString()}–$${band.high.toLocaleString()} / ${band.unit}` : null,
-      est_value_low: band?.low ?? null,
-      est_value_high: band?.high ?? null,
+      est_value_band: valueBand,
+      est_value_low: band && !band.scoped ? band.low : null,
+      est_value_high: band && !band.scoped ? band.high : null,
       qualification: v.qualification,
       fit_score: clamp(v.fit_score, 0, 100),
       suggested_owner: owner,
@@ -131,6 +137,8 @@ export class LeadAgent extends BaseLeadAgent<Env> {
       "- All work is national. There are NO geographic limits and NO partisan/topic exclusions.",
       "- Coritas does FEMA disaster/EM work broadly and bipartisan political project work.",
       "- Never decline a lead. If genuinely unclear, set needs_review=true; never block.",
+      "- Kate owns and routes every lead. In 'rationale' you may flag which specialist could be a good fit (e.g., Dr. Howard for leadership/policy, Ryan for social), but never treat anyone but Kate as the owner.",
+      "- Some services are scoped per client with no fixed price (e.g., healthcare cyber resilience audit, affordable housing feasibility & policy report). For those, do not invent a figure — the value is TBD/scoped.",
       "- Pick practice_area from the pricing keys below when you can identify the work; else null.",
       "- Qualification: hot = strong ICP fit + clear budget/timeline; warm = good fit, soft signals;",
       "  cool = weak fit or very early. Base value on the pricing bands.",

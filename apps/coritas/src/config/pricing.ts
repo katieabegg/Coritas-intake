@@ -7,9 +7,11 @@ export interface PriceBand {
   key: string;
   anchor: AnchorKey;
   label: string;
-  low: number;
-  high: number;
+  // null low/high with scoped:true => value is bespoke per client (no fixed figure).
+  low: number | null;
+  high: number | null;
   unit: PriceUnit;
+  scoped?: boolean;
 }
 
 export type AnchorKey = "anchor_a" | "anchor_b" | "social_media";
@@ -21,7 +23,7 @@ export const PRICE_BANDS: PriceBand[] = [
   { key: "grant_writing", anchor: "anchor_a", label: "Grant writing", low: 8_000, high: 25_000, unit: "project" },
   { key: "fema_elevation_pm", anchor: "anchor_a", label: "FEMA elevation rescue PM", low: 25_000, high: 45_000, unit: "project" },
   { key: "community_advocacy", anchor: "anchor_a", label: "Community advocacy", low: 20_000, high: 40_000, unit: "project" },
-  { key: "healthcare_cyber", anchor: "anchor_a", label: "Healthcare cyber resilience", low: 70_000, high: 120_000, unit: "project" },
+  { key: "healthcare_cyber", anchor: "anchor_a", label: "Healthcare cyber resilience audit", low: null, high: null, unit: "project", scoped: true },
   { key: "expert_witness", anchor: "anchor_a", label: "Expert witness / advisory", low: 20_000, high: 60_000, unit: "project" },
 
   // Anchor B — Strategic Leadership Advisory
@@ -30,6 +32,9 @@ export const PRICE_BANDS: PriceBand[] = [
   { key: "strategic_leadership_project", anchor: "anchor_b", label: "Strategic leadership (project)", low: 25_000, high: 100_000, unit: "project" },
   { key: "strategic_leadership_retainer", anchor: "anchor_b", label: "Strategic leadership (retainer)", low: 5_000, high: 25_000, unit: "retainer_month" },
   { key: "executive_education", anchor: "anchor_b", label: "Executive education", low: 5_000, high: 15_000, unit: "day" },
+
+  // Bespoke / scoped per client — no fixed figure (value depends on each engagement).
+  { key: "affordable_housing", anchor: "anchor_b", label: "Affordable housing feasibility & policy report", low: null, high: null, unit: "project", scoped: true },
 ];
 
 export function bandByKey(key: string): PriceBand | undefined {
@@ -38,8 +43,9 @@ export function bandByKey(key: string): PriceBand | undefined {
 
 /** Compact, model-readable summary of all bands for the classifier prompt. */
 export function pricingSummary(): string {
-  return PRICE_BANDS.map(
-    (b) =>
-      `- ${b.key} (${b.anchor}): ${b.label} — $${b.low.toLocaleString()}–$${b.high.toLocaleString()} per ${b.unit}`,
+  return PRICE_BANDS.map((b) =>
+    b.scoped || b.low == null || b.high == null
+      ? `- ${b.key} (${b.anchor}): ${b.label} — scoped per client (no fixed figure)`
+      : `- ${b.key} (${b.anchor}): ${b.label} — $${b.low.toLocaleString()}–$${b.high.toLocaleString()} per ${b.unit}`,
   ).join("\n");
 }
