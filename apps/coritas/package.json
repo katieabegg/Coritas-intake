@@ -1,0 +1,22 @@
+{
+  "name": "@coritas/coritas-intake",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "typecheck": "tsc --noEmit",
+    "migrate:local": "wrangler d1 migrations apply coritas_blog --local",
+    "migrate:remote": "wrangler d1 migrations apply coritas_blog --remote"
+  },
+  "dependencies": {
+    "@coritas/intake-core": "*",
+    "agents": "^0.0.80"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20250620.0",
+    "typescript": "^5.5.0",
+    "wrangler": "^4.20.0"
+  }
+}

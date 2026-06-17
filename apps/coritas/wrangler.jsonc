@@ -1,0 +1,35 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "coritas",
+  "main": "src/index.ts",
+  "compatibility_date": "2025-06-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "observability": { "enabled": true },
+
+  // Reuses the existing coritas_blog D1 (messages/clients/sessions/posts stay
+  // intact; the leads + lead_events tables are added via migrations/).
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "coritas_blog",
+      "database_id": "30ea0285-a546-4cf9-b3fb-b3a226a04941",
+      "migrations_dir": "migrations"
+    }
+  ],
+
+  // Per-lead agent (Durable Object via the Agents SDK).
+  "durable_objects": {
+    "bindings": [{ "name": "LEAD_AGENT", "class_name": "LeadAgent" }]
+  },
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["LeadAgent"] }],
+
+  // Non-secret config. Secrets (TURNSTILE_SECRET_KEY, ANTHROPIC_API_KEY,
+  // RESEND_API_KEY, SLACK_WEBHOOK_URL, ADMIN_TOKEN) are set as Cloudflare
+  // Secrets / Workers Builds env vars — never committed.
+  "vars": {
+    "CLAUDE_MODEL": "claude-sonnet-4-6",
+    "KATE_EMAIL": "kate.abegg@coritasstrategies.com",
+    "FROM_EMAIL": "intake@coritasstrategies.com",
+    "TURNSTILE_SITE_KEY": "REPLACE_WITH_PUBLIC_TURNSTILE_SITE_KEY"
+  }
+}
