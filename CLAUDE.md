@@ -61,3 +61,22 @@ visibility.
 Reuses the existing `coritas_blog` D1 database. This project only adds the
 `leads` and `lead_events` tables (via `apps/coritas/migrations/`); the existing
 `messages` / `clients` / `sessions` / `posts` tables are left untouched.
+
+## Capturing to-dos to Asana
+
+When a to-do or action item surfaces during **any** session — something Kate needs
+to do, a follow-up, or a deferred fix — **proactively create it as an Asana task**
+(don't wait to be asked), then tell Kate it was added, with the project name/link.
+
+- Use the Asana MCP tools (`mcp__Asana__create_tasks`); assign to Kate (`me`) and
+  include a short note with context.
+- File it in the **most relevant project**. If it doesn't clearly fit one, default
+  to **"Inbox / To-Sort"** (GID `1215816761829467`) for Kate to triage.
+- Projects (Asana workspace "Kate's first team"): Coritas Intake — Backlog ·
+  Coritas Strategies — Website · Lumberton Republicans · Cyber Contagion ·
+  Marketing & Content · Business Operations · Inbox / To-Sort.
+- This is a guideline Claude follows (CLAUDE.md is read each session), not a
+  mechanical hook — so it applies to sessions working in this repo. To extend it
+  everywhere, add the same note to other repos' `CLAUDE.md` or a global
+  `~/.claude/CLAUDE.md`.
+
