@@ -1,0 +1,19 @@
+{
+  "name": "coritas-intake",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Coritas Strategies intake system — agent-driven lead pipeline on Cloudflare.",
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "dev": "npm run dev --workspace apps/coritas",
+    "deploy": "npm run deploy --workspace apps/coritas",
+    "typecheck": "tsc --build",
+    "test": "npm run test --workspaces --if-present"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

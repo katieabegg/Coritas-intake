@@ -1,0 +1,17 @@
+# Coritas intake — local dev secrets template.
+# Copy to apps/coritas/.dev.vars for `wrangler dev`, and set the real values as
+# Cloudflare Secrets (production) via `wrangler secret put <NAME>` or the
+# Workers Builds dashboard env vars. NEVER commit the populated file.
+
+# Cloudflare Turnstile (bot protection on the public form).
+# Secret key (server-side verify). The site key is public and lives in the HTML.
+TURNSTILE_SECRET_KEY=
+
+# Anthropic Claude — powers LeadAgent classify / qualify / draft-reply.
+ANTHROPIC_API_KEY=
+
+# Resend — transactional email to notify Kate and (later) send approved replies.
+RESEND_API_KEY=
+
+# Slack incoming webhook — pings Kate's channel on every new lead.
+SLACK_WEBHOOK_URL=
