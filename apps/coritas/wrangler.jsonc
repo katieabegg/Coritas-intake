@@ -30,6 +30,10 @@
     "CLAUDE_MODEL": "claude-sonnet-4-6",
     "KATE_EMAIL": "kate.abegg@coritasstrategies.com",
     "FROM_EMAIL": "intake@coritasstrategies.com",
-    "TURNSTILE_SITE_KEY": "0x4AAAAAADmq62Fcg646VlZP"
+    "TURNSTILE_SITE_KEY": "0x4AAAAAADmq62Fcg646VlZP",
+    // Asana pipeline board (non-secret object IDs). The push is opt-in and only
+    // runs when the ASANA_TOKEN secret is also set. Project: "Coritas — Leads".
+    "ASANA_LEADS_PROJECT": "1215816843478734",
+    "ASANA_LEADS_SECTION": "1215817010342390"
   }
 }

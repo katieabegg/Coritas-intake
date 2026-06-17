@@ -9,6 +9,7 @@ import { Agent } from "agents";
 import { applyClassification, getLead, recordEvent } from "./d1.js";
 import { sendEmail } from "./email.js";
 import { notifySlack } from "./slack.js";
+import { createAsanaTask } from "./asana.js";
 import { addBusinessHours } from "./time.js";
 import type { LeadClassification, LeadRecord } from "./types.js";
 
@@ -22,6 +23,11 @@ export interface IntakeEnv {
   // Who receives every lead first, and the From address for outbound mail.
   KATE_EMAIL: string;
   FROM_EMAIL: string;
+  // Optional: mirror each new lead into an Asana board. The push only happens
+  // when ASANA_TOKEN + ASANA_LEADS_PROJECT are set, so it's fully opt-in.
+  ASANA_TOKEN?: string;
+  ASANA_LEADS_PROJECT?: string;
+  ASANA_LEADS_SECTION?: string;
 }
 
 export interface NotificationContent {
@@ -105,6 +111,21 @@ export abstract class BaseLeadAgent<
     });
     if (this.env.SLACK_WEBHOOK_URL) {
       await notifySlack(this.env.SLACK_WEBHOOK_URL, note.slack);
+    }
+    // Opt-in: mirror the lead onto the Asana pipeline board. Never block on it.
+    if (this.env.ASANA_TOKEN && this.env.ASANA_LEADS_PROJECT) {
+      try {
+        await createAsanaTask({
+          token: this.env.ASANA_TOKEN,
+          projectGid: this.env.ASANA_LEADS_PROJECT,
+          sectionGid: this.env.ASANA_LEADS_SECTION,
+          name: note.subject,
+          notes: note.text,
+        });
+        await recordEvent(this.env.DB, lead.id, "asana", "card created");
+      } catch (err) {
+        await recordEvent(this.env.DB, lead.id, "asana_error", String(err));
+      }
     }
     await recordEvent(this.env.DB, lead.id, "notified", "kate");
   }
