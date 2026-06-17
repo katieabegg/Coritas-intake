@@ -15,3 +15,8 @@ RESEND_API_KEY=
 
 # Slack incoming webhook — pings Kate's channel on every new lead.
 SLACK_WEBHOOK_URL=
+
+# Asana Personal Access Token — OPTIONAL. When set, each new lead also creates a
+# card on the "Coritas — Leads" board. Leave blank to disable. The project/section
+# IDs are non-secret and live in wrangler.jsonc (ASANA_LEADS_PROJECT/SECTION).
+ASANA_TOKEN=
