@@ -28,10 +28,13 @@ export const TEAM: TeamMember[] = [
   },
 ];
 
-/** Suggested owner for an anchor (first match). Kate retains final routing. */
-export function suggestedOwnerFor(anchor: AnchorKey): string {
-  const m = TEAM.find((t) => t.anchors.includes(anchor));
-  return m?.name ?? "Kate Abegg";
+/**
+ * Suggested owner. Kate owns every service line and routes each lead to the
+ * best-fit person herself, so the model never pre-assigns away from her. The
+ * roster still feeds the prompt so the model can flag a possible specialist fit.
+ */
+export function suggestedOwnerFor(_anchor: AnchorKey): string {
+  return "Kate Abegg";
 }
 
 export function rosterSummary(): string {
