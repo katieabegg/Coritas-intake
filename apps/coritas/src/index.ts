@@ -5,6 +5,7 @@
 //   GET  /api/leads   → Kate's pipeline view (admin-token guarded)
 import {
   assignLead,
+  constantTimeEqual,
   getLead,
   insertLead,
   recordEvent,
@@ -23,10 +24,12 @@ const json = (data: unknown, status = 200): Response =>
     headers: { "Content-Type": "application/json" },
   });
 
-function authorized(req: Request, env: Env): boolean {
+async function authorized(req: Request, env: Env): Promise<boolean> {
+  if (!env.ADMIN_TOKEN) return false; // fail closed if unset
   const header = req.headers.get("Authorization") ?? "";
   const token = header.replace(/^Bearer\s+/i, "");
-  return Boolean(env.ADMIN_TOKEN) && token === env.ADMIN_TOKEN;
+  if (!token) return false;
+  return constantTimeEqual(token, env.ADMIN_TOKEN);
 }
 
 export default {
@@ -44,12 +47,12 @@ export default {
     }
 
     if (req.method === "POST" && url.pathname === "/api/route") {
-      if (!authorized(req, env)) return json({ error: "unauthorized" }, 401);
+      if (!(await authorized(req, env))) return json({ error: "unauthorized" }, 401);
       return handleRoute(req, env);
     }
 
     if (req.method === "GET" && url.pathname === "/api/leads") {
-      if (!authorized(req, env)) return json({ error: "unauthorized" }, 401);
+      if (!(await authorized(req, env))) return json({ error: "unauthorized" }, 401);
       const { results } = await env.DB.prepare(
         `SELECT id, name, email, organization, lane, qualification, fit_score,
                 est_value_band, status, suggested_owner, assigned_to, needs_review,
