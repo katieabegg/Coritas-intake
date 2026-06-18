@@ -98,6 +98,7 @@ export function renderForm(turnstileSiteKey: string): string {
         <option>Social Media Strategy &amp; Management</option>
         <option>Healthcare Cyber Resilience Audit</option>
         <option>Affordable Housing Feasibility and Policy Report</option>
+        <option>Website Development &amp; Business Process Automation</option>
         <option>Not sure / other</option>
       </select>
       <label for="need">What do you need help with? *</label>

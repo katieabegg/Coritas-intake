@@ -35,6 +35,7 @@ export const PRICE_BANDS: PriceBand[] = [
 
   // Bespoke / scoped per client — no fixed figure (value depends on each engagement).
   { key: "affordable_housing", anchor: "anchor_b", label: "Affordable housing feasibility & policy report", low: null, high: null, unit: "project", scoped: true },
+  { key: "web_dev_bpa", anchor: "anchor_b", label: "Website development & business process automation", low: null, high: null, unit: "project", scoped: true },
 ];
 
 export function bandByKey(key: string): PriceBand | undefined {

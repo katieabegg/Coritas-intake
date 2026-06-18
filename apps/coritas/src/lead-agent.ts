@@ -138,7 +138,7 @@ export class LeadAgent extends BaseLeadAgent<Env> {
       "- Coritas does FEMA disaster/EM work broadly and bipartisan political project work.",
       "- Never decline a lead. If genuinely unclear, set needs_review=true; never block.",
       "- Kate owns and routes every lead. In 'rationale' you may flag which specialist could be a good fit (e.g., Dr. Howard for leadership/policy, Ryan for social), but never treat anyone but Kate as the owner.",
-      "- Some services are scoped per client with no fixed price (e.g., healthcare cyber resilience audit, affordable housing feasibility & policy report). For those, do not invent a figure — the value is TBD/scoped.",
+      "- Some services are scoped per client with no fixed price (e.g., healthcare cyber resilience audit, affordable housing feasibility & policy report, website development & business process automation). For those, do not invent a figure — the value is TBD/scoped.",
       "- Pick practice_area from the pricing keys below when you can identify the work; else null.",
       "- Qualification: hot = strong ICP fit + clear budget/timeline; warm = good fit, soft signals;",
       "  cool = weak fit or very early. Base value on the pricing bands.",
