@@ -38,6 +38,7 @@ export const SERVICE_LANES: ServiceLane[] = [
       "Bipartisan political project work (national)",
       "Policy advisory",
       "Affordable housing feasibility & policy report",
+      "Website development & business process automation (strategy enablement)",
       "Executive education",
     ],
   },
