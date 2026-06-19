@@ -18,6 +18,10 @@ She is a **beginner/intermediate developer learning as she goes**. When helping:
 - **Secrets:** never ask Kate to paste a secret value into chat. Public values
   (e.g. a Turnstile *site* key) are fine; private ones (API keys, *secret* keys,
   tokens) go straight into Cloudflare as Worker Secrets.
+- **Brand email:** use **`innovationlab@coritasstrategies.com`** (the real,
+  monitored Coritas inbox) on all outward-facing Coritas work — site contact,
+  system send-from, copy, etc. `intake@` is only an internal alias and should not
+  be shown publicly. Lead notifications are delivered to `kate.abegg@` (Outlook).
 
 ## What this is
 
