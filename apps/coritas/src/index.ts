@@ -14,6 +14,7 @@ import {
   type RawLeadSubmission,
 } from "@coritas/intake-core";
 import { getAgentByName } from "agents";
+import { runBackup } from "./backup.js";
 import type { Env } from "./env.js";
 import { renderForm } from "./form.js";
 import { LeadAgent } from "./lead-agent.js";
@@ -63,6 +64,21 @@ export default {
     }
 
     return json({ error: "not found" }, 404);
+  },
+
+  // Daily off-site backup of the lead pipeline → R2 (see backup.ts). Cron is
+  // configured in wrangler.jsonc; failures surface in Workers logs/observability.
+  async scheduled(_controller: ScheduledController, env: Env, ctx: ExecutionContext): Promise<void> {
+    ctx.waitUntil(
+      runBackup(env)
+        .then((r) =>
+          console.log(
+            `backup ok: ${r.key} (leads=${r.counts.leads ?? 0}, ` +
+              `events=${r.counts.lead_events ?? 0}, pruned=${r.pruned})`,
+          ),
+        )
+        .catch((err: unknown) => console.error(`backup failed: ${String(err)}`)),
+    );
   },
 };
 

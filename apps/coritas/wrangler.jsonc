@@ -23,6 +23,13 @@
   },
   "migrations": [{ "tag": "v1", "new_sqlite_classes": ["LeadAgent"] }],
 
+  // Off-site backups: the daily cron (below) snapshots leads + lead_events into
+  // this R2 bucket; TrueNAS Cloud Sync pulls it down for the local 3-2-1 copy.
+  "r2_buckets": [{ "binding": "BACKUPS", "bucket_name": "coritas-backups" }],
+
+  // Daily backup at 09:10 UTC (see scheduled() in src/index.ts).
+  "triggers": { "crons": ["10 9 * * *"] },
+
   // Non-secret config. Secrets (TURNSTILE_SECRET_KEY, ANTHROPIC_API_KEY,
   // RESEND_API_KEY, SLACK_WEBHOOK_URL, ADMIN_TOKEN) are set as Cloudflare
   // Secrets / Workers Builds env vars — never committed.
