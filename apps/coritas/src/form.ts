@@ -107,28 +107,14 @@ export function renderForm(turnstileSiteKey: string): string {
       </select>
       <label for="need">What do you need help with? *</label>
       <textarea id="need" name="need" required placeholder="Briefly describe your situation, goals, and any deadlines."></textarea>
-      <div class="row">
-        <div>
-          <label for="timeline">Timeline</label>
-          <select id="timeline" name="timeline">
-            <option value="">— Select —</option>
-            <option>Urgent (&lt; 2 weeks)</option>
-            <option>This quarter</option>
-            <option>Next quarter</option>
-            <option>Exploratory / no date</option>
-          </select>
-        </div>
-        <div>
-          <label for="budget_band">Budget band (optional)</label>
-          <select id="budget_band" name="budget_band">
-            <option value="">— Prefer not to say —</option>
-            <option>Under $5K</option>
-            <option>$5K–$25K</option>
-            <option>$25K–$75K</option>
-            <option>$75K+</option>
-          </select>
-        </div>
-      </div>
+      <label for="timeline">Timeline</label>
+      <select id="timeline" name="timeline">
+        <option value="">— Select —</option>
+        <option>Urgent (&lt; 2 weeks)</option>
+        <option>This quarter</option>
+        <option>Next quarter</option>
+        <option>Exploratory / no date</option>
+      </select>
       <div class="row">
         <div><label for="how_heard">How did you hear about us?</label><input id="how_heard" name="how_heard" /></div>
         <div><label for="location">Location (optional)</label><input id="location" name="location" /></div>
