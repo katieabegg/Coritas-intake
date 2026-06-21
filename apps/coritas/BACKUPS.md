@@ -66,16 +66,18 @@ A restore is a manual, deliberate action (it should be rare):
 ## The local (NAS) copy — one-time TrueNAS setup
 
 The cloud half (D1 → R2) runs on its own. To add the local copy, create a
-**Cloud Sync Task** in TrueNAS SCALE pointing at the R2 bucket:
+**Cloud Sync Task** in TrueNAS pointing at the R2 bucket. Both TrueNAS editions
+support this; the exact menu labels below are for **SCALE** and differ somewhat
+on **CORE**, so confirm which edition the NAS is running first.
 
 1. Generate an **R2 API token** (S3 access key + secret) scoped to read
    `coritas-backups` (Cloudflare dashboard → R2 → Manage R2 API Tokens).
-2. TrueNAS → **Credentials → Backup Credentials → Cloud Credentials → Add**:
-   provider **S3-compatible**, endpoint = your R2 S3 endpoint
+2. Add an **S3-compatible cloud credential** (SCALE: Credentials → Backup
+   Credentials → Cloud Credentials → Add): endpoint = your R2 S3 endpoint
    (`https://<account-id>.r2.cloudflarestorage.com`), paste the access key +
    secret.
-3. TrueNAS → **Data Protection → Cloud Sync Tasks → Add**: direction **Pull**,
-   the credential above, bucket `coritas-backups`, a local dataset as the
-   target, on a daily schedule (a little after 09:10 UTC).
+3. Add a **Cloud Sync Task** (SCALE: Data Protection → Cloud Sync Tasks → Add):
+   direction **Pull**, the credential above, bucket `coritas-backups`, a local
+   dataset as the target, on a daily schedule (a little after 09:10 UTC).
 
 The NAS only ever needs the read-only R2 key — never a Cloudflare API token.
