@@ -79,8 +79,8 @@ export function renderForm(turnstileSiteKey: string): string {
       <p class="pillars">Vision<span>&bull;</span>Leadership<span>&bull;</span>Innovation</p>
     </header>
     <form id="intake">
-      <h1>Work with us</h1>
-      <p class="sub">Tell us what you need. Kate reviews every inquiry personally.
+      <h1>Rise Together</h1>
+      <p class="sub">Tell us where you are and where you want to go — Kate reads every inquiry personally and replies herself.
         <span class="note">Fields marked * are required.</span></p>
       <div class="row">
         <div><label for="name">Name *</label><input id="name" name="name" required /></div>
@@ -93,42 +93,28 @@ export function renderForm(turnstileSiteKey: string): string {
       <label for="service_area">Service area</label>
       <select id="service_area" name="service_area">
         <option value="">— Select —</option>
-        <option>Emergency Management &amp; Disaster Recovery (FEMA)</option>
-        <option>Grant Readiness &amp; Grant Writing</option>
-        <option>Homeowner Mitigation Audit</option>
-        <option>Healthcare Cyber Resilience Audit</option>
         <option>Strategic Leadership Advisory</option>
-        <option>Political / Policy Project</option>
         <option>Executive Education</option>
-        <option>Affordable Housing Feasibility &amp; Policy Report</option>
-        <option>Social Media Strategy &amp; Management</option>
         <option>Website Development &amp; Business Process Automation</option>
+        <option>Political / Policy Project</option>
+        <option>Grant Readiness &amp; Grant Writing</option>
+        <option>Social Media Strategy &amp; Management</option>
+        <option>Homeowner Preparedness / Disaster Mitigation Audit</option>
+        <option>Healthcare Cyber Resilience Audit</option>
+        <option>Affordable Housing Feasibility &amp; Policy Report</option>
+        <option>Emergency Management &amp; Disaster Recovery (FEMA)</option>
         <option>Not sure / other</option>
       </select>
       <label for="need">What do you need help with? *</label>
       <textarea id="need" name="need" required placeholder="Briefly describe your situation, goals, and any deadlines."></textarea>
-      <div class="row">
-        <div>
-          <label for="timeline">Timeline</label>
-          <select id="timeline" name="timeline">
-            <option value="">— Select —</option>
-            <option>Urgent (&lt; 2 weeks)</option>
-            <option>This quarter</option>
-            <option>Next quarter</option>
-            <option>Exploratory / no date</option>
-          </select>
-        </div>
-        <div>
-          <label for="budget_band">Budget band (optional)</label>
-          <select id="budget_band" name="budget_band">
-            <option value="">— Prefer not to say —</option>
-            <option>Under $5K</option>
-            <option>$5K–$25K</option>
-            <option>$25K–$75K</option>
-            <option>$75K+</option>
-          </select>
-        </div>
-      </div>
+      <label for="timeline">Timeline</label>
+      <select id="timeline" name="timeline">
+        <option value="">— Select —</option>
+        <option>Urgent (&lt; 2 weeks)</option>
+        <option>This quarter</option>
+        <option>Next quarter</option>
+        <option>Exploratory / no date</option>
+      </select>
       <div class="row">
         <div><label for="how_heard">How did you hear about us?</label><input id="how_heard" name="how_heard" /></div>
         <div><label for="location">Location (optional)</label><input id="location" name="location" /></div>
