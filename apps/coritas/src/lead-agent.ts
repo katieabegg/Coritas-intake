@@ -72,11 +72,18 @@ export class LeadAgent extends BaseLeadAgent<Env> {
       .filter(Boolean)
       .join(" ");
 
-    // Hot leads must carry a scheduler link placeholder in the draft.
+    // Hot leads carry a scheduler link in the draft. The model is told to emit a
+    // placeholder token; we resolve it to the real SCHEDULER_URL here so a draft
+    // never ships the raw {{SCHEDULER_LINK}} text. If no link is configured yet,
+    // fall back to a neutral phrase Kate can fill in.
+    const schedulerUrl = this.env.SCHEDULER_URL?.trim() || null;
     let draft = v.draft_reply ?? "";
     if (v.qualification === "hot" && !draft.includes(SCHEDULER_PLACEHOLDER)) {
       draft += `\n\nGrab a time that works for you: ${SCHEDULER_PLACEHOLDER}`;
     }
+    draft = draft
+      .split(SCHEDULER_PLACEHOLDER)
+      .join(schedulerUrl ?? "(scheduling link to follow)");
 
     const valueBand = band
       ? band.scoped || band.low == null || band.high == null

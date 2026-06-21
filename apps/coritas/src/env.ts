@@ -8,6 +8,10 @@ export interface Env extends IntakeEnv {
   TURNSTILE_SECRET_KEY: string;
   // Shared token guarding Kate's routing endpoint (set as a Cloudflare secret).
   ADMIN_TOKEN: string;
+  // Public scheduling link (Cal.com / Calendly) dropped into hot-lead reply
+  // drafts. Optional: if unset, drafts read "(scheduling link to follow)" rather
+  // than exposing the raw placeholder token.
+  SCHEDULER_URL?: string;
   // Agents-SDK namespace for the per-lead agent (Durable Object under the hood).
   LEAD_AGENT: AgentNamespace<LeadAgent>;
 }
