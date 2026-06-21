@@ -54,9 +54,9 @@ export default {
     if (req.method === "GET" && url.pathname === "/api/leads") {
       if (!(await authorized(req, env))) return json({ error: "unauthorized" }, 401);
       const { results } = await env.DB.prepare(
-        `SELECT id, name, email, organization, lane, qualification, fit_score,
-                est_value_band, status, suggested_owner, assigned_to, needs_review,
-                next_action, created_at
+        `SELECT id, name, email, organization, source, org_type, lane,
+                qualification, fit_score, est_value_band, status, suggested_owner,
+                assigned_to, needs_review, next_action, created_at
          FROM leads ORDER BY created_at DESC LIMIT 200`,
       ).all();
       return json({ leads: results });
@@ -98,7 +98,11 @@ async function handleSubmit(
 
   // 3) Persist as a new, unassigned lead (Coritas origination).
   const id = await insertLead(env.DB, result.value, "coritas");
-  await recordEvent(env.DB, id, "intake", "website form");
+  const intakeDetail =
+    result.value.source === "giving-back"
+      ? "website form — pro bono (giving-back)"
+      : "website form";
+  await recordEvent(env.DB, id, "intake", intakeDetail);
 
   // 4) Dispatch the per-lead agent (classify → notify Kate → schedule) async.
   const agent = await getAgentByName(env.LEAD_AGENT, `lead-${id}`);
