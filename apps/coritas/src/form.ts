@@ -93,16 +93,16 @@ export function renderForm(turnstileSiteKey: string): string {
       <label for="service_area">Service area</label>
       <select id="service_area" name="service_area">
         <option value="">— Select —</option>
-        <option>Emergency Management &amp; Disaster Recovery (FEMA)</option>
-        <option>Grant Readiness &amp; Grant Writing</option>
-        <option>Homeowner Mitigation Audit</option>
-        <option>Healthcare Cyber Resilience Audit</option>
         <option>Strategic Leadership Advisory</option>
-        <option>Political / Policy Project</option>
         <option>Executive Education</option>
-        <option>Affordable Housing Feasibility &amp; Policy Report</option>
-        <option>Social Media Strategy &amp; Management</option>
         <option>Website Development &amp; Business Process Automation</option>
+        <option>Political / Policy Project</option>
+        <option>Grant Readiness &amp; Grant Writing</option>
+        <option>Social Media Strategy &amp; Management</option>
+        <option>Homeowner Preparedness / Disaster Mitigation Audit</option>
+        <option>Healthcare Cyber Resilience Audit</option>
+        <option>Affordable Housing Feasibility &amp; Policy Report</option>
+        <option>Emergency Management &amp; Disaster Recovery (FEMA)</option>
         <option>Not sure / other</option>
       </select>
       <label for="need">What do you need help with? *</label>
