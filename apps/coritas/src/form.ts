@@ -24,8 +24,9 @@ export function renderForm(turnstileSiteKey: string): string {
   body { font:16px/1.6 'Montserrat',system-ui,sans-serif; color:var(--navy);
     margin:0; background:var(--cream); }
   main { max-width:660px; margin:2.5rem auto; padding:0 1.25rem 4rem; }
-  .card { position:relative; overflow:hidden; background:#fff; border:1px solid var(--line);
-    border-radius:14px; box-shadow:0 10px 30px rgba(44,59,98,.08); }
+  /* No floating panel — content sits directly on the page cream, like the
+     coritasstrategies.com pages. (Form inputs keep their own white fill.) */
+  .card { position:relative; overflow:hidden; background:transparent; }
   /* faint phoenix watermark behind the fields */
   .card::before { content:""; position:absolute; inset:0;
     background:var(--logo) center 38% / 62% no-repeat; opacity:.045;
