@@ -79,8 +79,8 @@ export function renderForm(turnstileSiteKey: string): string {
       <p class="pillars">Vision<span>&bull;</span>Leadership<span>&bull;</span>Innovation</p>
     </header>
     <form id="intake">
-      <h1>Work with us</h1>
-      <p class="sub">Tell us what you need. Kate reviews every inquiry personally.
+      <h1>Rise Together</h1>
+      <p class="sub">Tell us where you are and where you want to go — Kate reads every inquiry personally and replies herself.
         <span class="note">Fields marked * are required.</span></p>
       <div class="row">
         <div><label for="name">Name *</label><input id="name" name="name" required /></div>
