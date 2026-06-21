@@ -80,7 +80,8 @@ export function renderForm(turnstileSiteKey: string): string {
     </header>
     <form id="intake">
       <h1>Work with us</h1>
-      <p class="sub">Tell us what you need. Kate reviews every inquiry personally.</p>
+      <p class="sub">Tell us what you need. Kate reviews every inquiry personally.
+        <span class="note">Fields marked * are required.</span></p>
       <div class="row">
         <div><label for="name">Name *</label><input id="name" name="name" required /></div>
         <div><label for="email">Email *</label><input id="email" name="email" type="email" required /></div>
@@ -92,12 +93,15 @@ export function renderForm(turnstileSiteKey: string): string {
       <label for="service_area">Service area</label>
       <select id="service_area" name="service_area">
         <option value="">— Select —</option>
+        <option>Emergency Management &amp; Disaster Recovery (FEMA)</option>
+        <option>Grant Readiness &amp; Grant Writing</option>
+        <option>Homeowner Mitigation Audit</option>
+        <option>Healthcare Cyber Resilience Audit</option>
         <option>Strategic Leadership Advisory</option>
         <option>Political / Policy Project</option>
         <option>Executive Education</option>
+        <option>Affordable Housing Feasibility &amp; Policy Report</option>
         <option>Social Media Strategy &amp; Management</option>
-        <option>Healthcare Cyber Resilience Audit</option>
-        <option>Affordable Housing Feasibility and Policy Report</option>
         <option>Website Development &amp; Business Process Automation</option>
         <option>Not sure / other</option>
       </select>
@@ -160,6 +164,7 @@ export function renderForm(turnstileSiteKey: string): string {
       if (res.ok) {
         statusEl.textContent = 'Thanks — your inquiry is in. Kate will be in touch shortly.';
         statusEl.className = 'ok'; form.reset();
+        if (window.turnstile) window.turnstile.reset();
       } else {
         statusEl.textContent = (json.errors || ['Something went wrong.']).join(' ');
         statusEl.className = 'err'; btn.disabled = false;
