@@ -101,7 +101,7 @@ export abstract class BaseLeadAgent<
     c: LeadClassification,
   ): Promise<void> {
     const note = this.buildNotification(lead, c);
-    await sendEmail(this.env.RESEND_API_KEY, {
+    const sent = await sendEmail(this.env.RESEND_API_KEY, {
       from: this.env.FROM_EMAIL,
       to: this.env.KATE_EMAIL,
       subject: note.subject,
@@ -109,6 +109,23 @@ export abstract class BaseLeadAgent<
       text: note.text,
       reply_to: lead.email,
     });
+    // The whole system exists to notify Kate first — a silent email failure is the
+    // worst outcome. Record it and, if Slack is wired, raise a visible alert so a
+    // missed lead never just vanishes.
+    if (!sent.ok) {
+      await recordEvent(
+        this.env.DB,
+        lead.id,
+        "error",
+        `email notify failed: ${sent.error ?? "unknown"}`,
+      );
+      if (this.env.SLACK_WEBHOOK_URL) {
+        await notifySlack(
+          this.env.SLACK_WEBHOOK_URL,
+          `⚠️ Lead #${lead.id} (${lead.name} <${lead.email}>) arrived but the email notification FAILED — check the pipeline. Error: ${sent.error ?? "unknown"}`,
+        ).catch(() => {});
+      }
+    }
     if (this.env.SLACK_WEBHOOK_URL) {
       await notifySlack(this.env.SLACK_WEBHOOK_URL, note.slack);
     }
@@ -127,7 +144,12 @@ export abstract class BaseLeadAgent<
         await recordEvent(this.env.DB, lead.id, "asana_error", String(err));
       }
     }
-    await recordEvent(this.env.DB, lead.id, "notified", "kate");
+    await recordEvent(
+      this.env.DB,
+      lead.id,
+      "notified",
+      sent.ok ? "kate" : "kate (email send failed — see error event)",
+    );
   }
 
   private async scheduleFollowUps(
