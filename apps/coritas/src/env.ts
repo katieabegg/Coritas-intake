@@ -14,4 +14,7 @@ export interface Env extends IntakeEnv {
   SCHEDULER_URL?: string;
   // Agents-SDK namespace for the per-lead agent (Durable Object under the hood).
   LEAD_AGENT: AgentNamespace<LeadAgent>;
+  // Off-site backup bucket. The daily cron snapshots leads + lead_events here;
+  // a TrueNAS Cloud Sync task pulls it down for the local 3-2-1 copy.
+  BACKUPS: R2Bucket;
 }
