@@ -4,7 +4,10 @@
 // with the phoenix mark in the header and as a faint watermark behind the form.
 import { LOGO_DATA_URI } from "./logo.js";
 
-export function renderForm(turnstileSiteKey: string): string {
+// `probono` is true only when the visitor arrived via the Giving Back page
+// (?path=probono). The pro-bono service option is rendered solely in that case,
+// so it is absent from the page source for every other visitor.
+export function renderForm(turnstileSiteKey: string, probono = false): string {
   return `<!doctype html>
 <html lang="en">
 <head>
@@ -122,7 +125,7 @@ export function renderForm(turnstileSiteKey: string): string {
         <option>Healthcare Cyber Resilience Audit</option>
         <option>Affordable Housing Feasibility &amp; Policy Report</option>
         <option>Emergency Management &amp; Disaster Recovery (FEMA)</option>
-        <option value="Pro bono support">Pro bono support (nonprofits &amp; early-stage small businesses)</option>
+        ${probono ? `<option value="Pro bono support">Pro bono support (nonprofits &amp; early-stage small businesses)</option>` : ``}
         <option value="Not sure / Other — help me decide">Not sure / Other — help me decide</option>
       </select>
       <p id="decide-note" class="note decide-note">No problem — describe your situation below and Kate will point you to the right fit.</p>
