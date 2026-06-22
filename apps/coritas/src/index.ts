@@ -38,7 +38,10 @@ export default {
     const url = new URL(req.url);
 
     if (req.method === "GET" && url.pathname === "/") {
-      return new Response(renderForm(env.TURNSTILE_SITE_KEY ?? ""), {
+      // The pro-bono path is only offered to visitors arriving from the Giving
+      // Back page (?path=probono); everyone else never sees the option.
+      const probono = url.searchParams.get("path") === "probono";
+      return new Response(renderForm(env.TURNSTILE_SITE_KEY ?? "", probono), {
         headers: { "Content-Type": "text/html; charset=utf-8" },
       });
     }
