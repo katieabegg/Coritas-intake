@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "wrangler dev",
-    "deploy": "wrangler deploy",
+    "deploy": "npm run migrate:remote && wrangler deploy",
+    "deploy:worker": "wrangler deploy",
     "typecheck": "tsc --noEmit",
     "migrate:local": "wrangler d1 migrations apply coritas_blog --local",
     "migrate:remote": "wrangler d1 migrations apply coritas_blog --remote"

@@ -13,6 +13,10 @@ export interface RawLeadSubmission {
   how_heard?: unknown;
   consent?: unknown;
   location?: unknown;
+  // Pro bono ("Giving Back") path.
+  source?: unknown; // marketing source, e.g. 'giving-back'
+  org_type?: unknown; // 'nonprofit' | 'small_business'
+  mission?: unknown; // what the org does / its mission
   // Cloudflare Turnstile token from the widget.
   "cf-turnstile-response"?: unknown;
 }
@@ -30,6 +34,10 @@ export interface LeadInput {
   how_heard: string | null;
   consent: boolean;
   location: string | null;
+  // Pro bono ("Giving Back") path.
+  source: string | null;
+  org_type: string | null;
+  mission: string | null;
 }
 
 export type Qualification = "hot" | "warm" | "cool";

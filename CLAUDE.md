@@ -46,8 +46,14 @@ visibility.
 - Connected repo: `katieabegg/Coritas-intake`. **Production branch: `main`.**
   Every merge to `main` auto-builds and deploys.
 - Workers Builds config: **Root directory `/`**, **Build command `npm install`**,
-  **Deploy command `npm run deploy`** (this runs `wrangler deploy` inside
-  `apps/coritas` — running wrangler at the repo root fails for an npm workspace).
+  **Deploy command `npm run deploy`** (runs inside `apps/coritas` — running
+  wrangler at the repo root fails for an npm workspace).
+- **Everything ships through git.** `npm run deploy` first applies any pending D1
+  migrations (`wrangler d1 migrations apply coritas_blog --remote`) and *then*
+  `wrangler deploy`s the Worker — so a merge to `main` applies schema changes and
+  ships code together, in that order, with no manual or direct-to-prod step.
+  Migrations are idempotent (tracked in the `d1_migrations` table), so re-running
+  only applies new ones. Use `deploy:worker` for a code-only deploy if ever needed.
 - Deployed Worker name: **`coritas-intake`** (must match the `name` in
   `apps/coritas/wrangler.jsonc`, or Workers Builds rejects the deploy).
 - Live URL: `https://coritas-intake.kate-abegg.workers.dev`.
@@ -57,7 +63,8 @@ visibility.
 - `npm install` — install all workspaces (from repo root).
 - `npm run dev` — local dev server (`wrangler dev`) for `apps/coritas`.
 - `npm run deploy` — deploy (normally done by Workers Builds, not by hand).
-- `npm run migrate:remote --workspace apps/coritas` — apply D1 migrations to prod.
+- `npm run migrate:remote --workspace apps/coritas` — apply D1 migrations to prod
+  by hand (normally unnecessary — `npm run deploy` does this automatically).
 - `npm run typecheck` — type-check all workspaces.
 
 ## Data

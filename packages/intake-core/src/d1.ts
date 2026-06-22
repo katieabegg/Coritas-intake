@@ -12,8 +12,9 @@ export async function insertLead(
     .prepare(
       `INSERT INTO leads
         (name, email, organization, role, need, service_area, timeline,
-         budget_band, how_heard, consent, location, originator, status)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'new')`,
+         budget_band, how_heard, consent, location, source, org_type, mission,
+         originator, status)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'new')`,
     )
     .bind(
       lead.name,
@@ -27,6 +28,9 @@ export async function insertLead(
       lead.how_heard,
       lead.consent ? 1 : 0,
       lead.location,
+      lead.source,
+      lead.org_type,
+      lead.mission,
       originator,
     )
     .run();

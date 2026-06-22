@@ -68,6 +68,19 @@ export function renderForm(turnstileSiteKey: string): string {
   .note { font-size:.78rem; color:var(--gray); margin-top:.3rem; font-weight:400; }
   #status { margin-top:1rem; font-weight:600; }
   .ok { color:#1a7f37; } .err { color:var(--rust); }
+  /* Pro bono ("Giving Back") path: intro banner + conditional fields, hidden
+     until the Pro bono option is chosen or the ?path=probono deep link loads. */
+  .intro { display:none; margin:0 0 1.5rem; padding:.95rem 1.1rem;
+    background:rgba(44,59,98,.05); border:1px solid var(--line);
+    border-left:3px solid var(--gold); border-radius:8px;
+    font-size:.92rem; color:var(--navy); }
+  .intro strong { font-weight:600; }
+  #probono-fields { display:none; }
+  .choice { display:flex; flex-wrap:wrap; gap:1.25rem; margin-top:.35rem; }
+  .choice label { display:flex; align-items:center; gap:.45rem; margin:0;
+    font-weight:400; font-size:.92rem; color:var(--navy); cursor:pointer; }
+  .choice input { width:auto; }
+  .decide-note { display:none; }
 </style>
 </head>
 <body>
@@ -83,6 +96,11 @@ export function renderForm(turnstileSiteKey: string): string {
       <h1>Rise Together</h1>
       <p class="sub">Tell us where you are and where you want to go — Kate reads every inquiry personally and replies herself.
         <span class="note">Fields marked * are required.</span></p>
+      <div id="probono-intro" class="intro">
+        <strong>You're applying for pro bono support.</strong> We take on a select few
+        each year, and we read every request. Tell us about your organization below.
+      </div>
+      <input type="hidden" id="source" name="source" value="" />
       <div class="row">
         <div><label for="name">Name *</label><input id="name" name="name" required /></div>
         <div><label for="email">Email *</label><input id="email" name="email" type="email" required /></div>
@@ -104,8 +122,19 @@ export function renderForm(turnstileSiteKey: string): string {
         <option>Healthcare Cyber Resilience Audit</option>
         <option>Affordable Housing Feasibility &amp; Policy Report</option>
         <option>Emergency Management &amp; Disaster Recovery (FEMA)</option>
-        <option>Not sure / other</option>
+        <option value="Pro bono support">Pro bono support (nonprofits &amp; early-stage small businesses)</option>
+        <option value="Not sure / Other — help me decide">Not sure / Other — help me decide</option>
       </select>
+      <p id="decide-note" class="note decide-note">No problem — describe your situation below and Kate will point you to the right fit.</p>
+      <div id="probono-fields">
+        <label>Are you a nonprofit or a small business? *</label>
+        <div class="choice">
+          <label><input type="radio" name="org_type" value="nonprofit" /> Nonprofit</label>
+          <label><input type="radio" name="org_type" value="small_business" /> Early-stage small business</label>
+        </div>
+        <label for="mission">Your mission — what do you do? *</label>
+        <textarea id="mission" name="mission" placeholder="Tell us about your organization and the people you serve."></textarea>
+      </div>
       <label for="need">What do you need help with? *</label>
       <textarea id="need" name="need" required placeholder="Briefly describe your situation, goals, and any deadlines."></textarea>
       <label for="timeline">Timeline</label>
@@ -134,6 +163,36 @@ export function renderForm(turnstileSiteKey: string): string {
   const form = document.getElementById('intake');
   const statusEl = document.getElementById('status');
   const btn = document.getElementById('submit');
+
+  // --- Pro bono ("Giving Back") path ---------------------------------------
+  const serviceSel = document.getElementById('service_area');
+  const probonoIntro = document.getElementById('probono-intro');
+  const probonoFields = document.getElementById('probono-fields');
+  const decideNote = document.getElementById('decide-note');
+  const sourceInput = document.getElementById('source');
+  const missionEl = document.getElementById('mission');
+  const orgTypeInputs = form.querySelectorAll('input[name="org_type"]');
+  // Did the visitor arrive via the Giving Back CTA (?path=probono)? If so the
+  // submission stays tagged giving-back regardless of later edits.
+  const fromGivingBack = new URLSearchParams(location.search).get('path') === 'probono';
+
+  function syncInquiry() {
+    const isProbono = serviceSel.value === 'Pro bono support';
+    probonoIntro.style.display = isProbono ? 'block' : 'none';
+    probonoFields.style.display = isProbono ? 'block' : 'none';
+    decideNote.style.display =
+      serviceSel.value === 'Not sure / Other — help me decide' ? 'block' : 'none';
+    // Only require the pro-bono fields when that path is active.
+    missionEl.required = isProbono;
+    orgTypeInputs.forEach((r) => { r.required = isProbono; });
+    sourceInput.value = (isProbono || fromGivingBack) ? 'giving-back' : '';
+  }
+  serviceSel.addEventListener('change', syncInquiry);
+
+  if (fromGivingBack) serviceSel.value = 'Pro bono support';
+  syncInquiry();
+  // -------------------------------------------------------------------------
+
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
     statusEl.textContent = ''; statusEl.className = '';
