@@ -9,6 +9,7 @@ import {
   type NotificationContent,
 } from "@coritas/intake-core";
 import type { Env } from "./env.js";
+import { renderLeadEmailHtml } from "./email-template.js";
 import { bandByKey, pricingSummary, type AnchorKey } from "./config/pricing.js";
 import {
   BUYER_TYPES,
@@ -231,7 +232,7 @@ export class LeadAgent extends BaseLeadAgent<Env> {
     );
 
     const text = lines.join("\n");
-    const html = `<pre style="font-family:ui-monospace,monospace;white-space:pre-wrap">${escapeHtml(text)}</pre>`;
+    const html = renderLeadEmailHtml(lead, c);
     const slack =
       `*New ${c.qualification.toUpperCase()} lead* — ${c.lane}\n` +
       `${lead.name} (${lead.organization ?? "—"}) · fit ${c.fit_score} · ${c.est_value_band ?? "value TBD"}\n` +
@@ -244,11 +245,4 @@ export class LeadAgent extends BaseLeadAgent<Env> {
 function clamp(n: number, lo: number, hi: number): number {
   if (Number.isNaN(n)) return lo;
   return Math.max(lo, Math.min(hi, Math.round(n)));
-}
-
-function escapeHtml(s: string): string {
-  return s
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;");
 }
