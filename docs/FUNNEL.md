@@ -90,8 +90,12 @@ Power Automate — automation split across two tools.)
 ## The product-line choice (step 1)
 
 The contact form already has a **Service area** dropdown. We map each selectable
-product line to its questionnaire. (Decision: keep it a single choice, or allow
-multiple? Multiple means deciding which questionnaire to send first.)
+product line to its questionnaire.
+
+**Decision (Kate): multiple — allow the customer to pick more than one product
+line.** Consequence: if multiple lines are selected, the default is to send the
+questionnaire for **each** selected line; if that's too much for the customer,
+fall back to a single combined questionnaire. (Finalize at build.)
 
 ## The customer emails (new)
 
@@ -105,26 +109,32 @@ Both sent via Resend from `innovationlab@coritasstrategies.com`, reply-to Kate,
 in the same branded style as the lead-notification email. Copy drafted in Kate's
 voice and shown to her before going live.
 
-## The one tricky integration: Bookings → Asana (step 5)
+## Bookings → Asana (step 5)
 
 Microsoft Bookings can't natively call our Worker when someone books, so to move
-the card to "Call booked" and create the customer project automatically we need
-one of:
-- **(a) Power Automate** flow: watch Bookings, ping a Worker endpoint on a new
-  booking. Keeps Microsoft Bookings.
-- **(b) Build the booking step into the site** too, so we control it end-to-end
-  (no dependency on Bookings).
+the card to "Call booked" and create the customer project automatically:
 
-Everything else in the funnel is straightforward; this is the only piece that
-needs a real decision.
+**Decision (Kate): use Power Automate (option a).** Keeps the existing Microsoft
+Bookings setup (availability, calendar, confirmations, reminders — already built)
+and bridges it with a low-code flow Kate can manage inside M365: on a new
+booking, the flow pings a Worker endpoint that advances the pipeline.
+
+- Caveat: Power Automate's outbound **HTTP action can require a premium license**
+  tier. If that's a snag, the fallback is for the **Worker to poll the Bookings
+  calendar** (Microsoft Graph) on its daily schedule — same result, no Power
+  Automate. Choose at build time based on the license.
+- Rejected: building our own scheduler into the site — it would reproduce, worse,
+  what Bookings already does.
 
 ## What's needed to build (inputs / decisions)
 
 1. **Questionnaire content** for each product line (from the Mac mini).
 2. **The booking link** URL (and confirm it's the Microsoft Bookings page).
 3. **Asana token** set as a Worker secret (turns on all the auto-Asana steps).
-4. Decision: **Bookings bridge** — Power Automate (a) or build-our-own (b)?
-5. Decision: product-line choice **single or multiple**?
+4. ~~Decision: **Bookings bridge**~~ → **DECIDED: Power Automate** (Worker-polls-
+   Graph as fallback if a premium license is a snag).
+5. ~~Decision: product-line choice **single or multiple**~~ → **DECIDED: multiple**
+   (send a questionnaire per selected line; combined as fallback).
 6. Who creates the **"Customer Portfolio"** — Kate once in the UI, or the Worker.
 
 ## Suggested build order
