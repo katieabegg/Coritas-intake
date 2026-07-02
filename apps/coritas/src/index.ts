@@ -341,6 +341,21 @@ async function afterQuestionnaire(
       "error",
       `booking email failed (claim released): ${sent.error ?? "unknown"}`,
     );
+    // Alert Kate by email — her actual channel (Slack is not in the stack; the
+    // notifySlack below is a silent no-op unless a webhook is ever configured).
+    // A failure to the prospect's address doesn't imply Kate's send fails too
+    // (bounces are recipient-specific), so this usually gets through; if Resend
+    // itself is down, the error event above is the durable record.
+    await sendEmail(env.RESEND_API_KEY, {
+      from: env.FROM_EMAIL,
+      to: env.KATE_EMAIL,
+      subject: `⚠️ Booking email FAILED: ${lead.name} — send them your calendar manually`,
+      text:
+        `${lead.name} <${lead.email}> completed their questionnaire, but the automatic ` +
+        `booking email did not go through (error: ${sent.error ?? "unknown"}).\n\n` +
+        `The system will retry if they complete another questionnaire; otherwise, ` +
+        `please send them your booking link directly so the lead doesn't stall.`,
+    }).catch(() => {});
     if (env.SLACK_WEBHOOK_URL) {
       await notifySlack(
         env.SLACK_WEBHOOK_URL,
