@@ -14,6 +14,7 @@ import {
   getLead,
   getQuestionnaireByToken,
   insertLead,
+  notifySlack,
   recordEvent,
   sendEmail,
   validateLead,
@@ -325,15 +326,35 @@ async function afterQuestionnaire(
     text: msg.text,
     reply_to: env.KATE_EMAIL,
   });
+
+  if (!sent.ok) {
+    // Release the claim so a later questionnaire completion (or retry) can
+    // send it — otherwise one Resend hiccup silently eats the booking email.
+    await env.DB.prepare(
+      `UPDATE leads SET booking_email_at = NULL WHERE id = ?`,
+    )
+      .bind(lead.id)
+      .run();
+    await recordEvent(
+      env.DB,
+      lead.id,
+      "error",
+      `booking email failed (claim released): ${sent.error ?? "unknown"}`,
+    );
+    if (env.SLACK_WEBHOOK_URL) {
+      await notifySlack(
+        env.SLACK_WEBHOOK_URL,
+        `⚠️ Booking email to lead #${lead.id} (${lead.name} <${lead.email}>) FAILED — they finished the questionnaire but got no scheduling link. Error: ${sent.error ?? "unknown"}`,
+      ).catch(() => {});
+    }
+    return;
+  }
+
   await recordEvent(
     env.DB,
     lead.id,
-    sent.ok ? "booking_email_sent" : "error",
-    sent.ok
-      ? bookingUrl
-        ? "with booking link"
-        : "fallback copy — SCHEDULER_URL not set"
-      : `booking email failed: ${sent.error ?? "unknown"}`,
+    "booking_email_sent",
+    bookingUrl ? "with booking link" : "fallback copy — SCHEDULER_URL not set",
   );
 }
 
