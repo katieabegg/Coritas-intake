@@ -83,6 +83,9 @@ export function renderForm(turnstileSiteKey: string, probono = false): string {
   .choice label { display:flex; align-items:center; gap:.45rem; margin:0;
     font-weight:400; font-size:.92rem; color:var(--navy); cursor:pointer; }
   .choice input { width:auto; }
+  /* Service-area checkbox grid: two columns, stacking on small screens. */
+  .choice.services { display:grid; grid-template-columns:1fr 1fr; gap:.55rem 1.25rem; }
+  @media (max-width:520px){ .choice.services { grid-template-columns:1fr; } }
   .decide-note { display:none; }
 </style>
 </head>
@@ -112,22 +115,21 @@ export function renderForm(turnstileSiteKey: string, probono = false): string {
         <div><label for="organization">Organization</label><input id="organization" name="organization" /></div>
         <div><label for="role">Role / title</label><input id="role" name="role" /></div>
       </div>
-      <label for="service_area">Service area</label>
-      <select id="service_area" name="service_area">
-        <option value="">— Select —</option>
-        <option>Strategic Leadership Advisory</option>
-        <option>Executive Education</option>
-        <option>Website Development &amp; Business Process Automation</option>
-        <option>Political / Policy Project</option>
-        <option>Grant Readiness &amp; Grant Writing</option>
-        <option>Social Media Strategy &amp; Management</option>
-        <option>Homeowner Preparedness / Disaster Mitigation Audit</option>
-        <option>Healthcare Cyber Resilience Audit</option>
-        <option>Affordable Housing Feasibility &amp; Policy Report</option>
-        <option>Emergency Management &amp; Disaster Recovery (FEMA)</option>
-        ${probono ? `<option value="Pro bono support">Pro bono support (nonprofits &amp; early-stage small businesses)</option>` : ``}
-        <option value="Not sure / Other — help me decide">Not sure / Other — help me decide</option>
-      </select>
+      <label>Service areas <span class="note">— choose any that apply</span></label>
+      <div class="choice services" id="service_area">
+        <label><input type="checkbox" name="service_area" value="Strategic Leadership Advisory" /> Strategic Leadership Advisory</label>
+        <label><input type="checkbox" name="service_area" value="Executive Education" /> Executive Education</label>
+        <label><input type="checkbox" name="service_area" value="Website Development & Business Process Automation" /> Website Development &amp; Business Process Automation</label>
+        <label><input type="checkbox" name="service_area" value="Political / Policy Project" /> Political / Policy Project</label>
+        <label><input type="checkbox" name="service_area" value="Grant Readiness & Grant Writing" /> Grant Readiness &amp; Grant Writing</label>
+        <label><input type="checkbox" name="service_area" value="Social Media Strategy & Management" /> Social Media Strategy &amp; Management</label>
+        <label><input type="checkbox" name="service_area" value="Homeowner Preparedness / Disaster Mitigation Audit" /> Homeowner Preparedness / Disaster Mitigation Audit</label>
+        <label><input type="checkbox" name="service_area" value="Healthcare Cyber Resilience Audit" /> Healthcare Cyber Resilience Audit</label>
+        <label><input type="checkbox" name="service_area" value="Affordable Housing Feasibility & Policy Report" /> Affordable Housing Feasibility &amp; Policy Report</label>
+        <label><input type="checkbox" name="service_area" value="Emergency Management & Disaster Recovery (FEMA)" /> Emergency Management &amp; Disaster Recovery (FEMA)</label>
+        ${probono ? `<label><input type="checkbox" name="service_area" value="Pro bono support" /> Pro bono support (nonprofits &amp; early-stage small businesses)</label>` : ``}
+        <label><input type="checkbox" name="service_area" value="Not sure / Other — help me decide" /> Not sure / Other — help me decide</label>
+      </div>
       <p id="decide-note" class="note decide-note">No problem — describe your situation below and Kate will point you to the right fit.</p>
       <div id="probono-fields">
         <label>Are you a nonprofit or a small business? *</label>
@@ -168,7 +170,7 @@ export function renderForm(turnstileSiteKey: string, probono = false): string {
   const btn = document.getElementById('submit');
 
   // --- Pro bono ("Giving Back") path ---------------------------------------
-  const serviceSel = document.getElementById('service_area');
+  const serviceBoxes = [...form.querySelectorAll('input[name="service_area"]')];
   const probonoIntro = document.getElementById('probono-intro');
   const probonoFields = document.getElementById('probono-fields');
   const decideNote = document.getElementById('decide-note');
@@ -179,20 +181,27 @@ export function renderForm(turnstileSiteKey: string, probono = false): string {
   // submission stays tagged giving-back regardless of later edits.
   const fromGivingBack = new URLSearchParams(location.search).get('path') === 'probono';
 
+  const selectedServices = () =>
+    serviceBoxes.filter((b) => b.checked).map((b) => b.value);
+
   function syncInquiry() {
-    const isProbono = serviceSel.value === 'Pro bono support';
+    const chosen = selectedServices();
+    const isProbono = chosen.includes('Pro bono support');
     probonoIntro.style.display = isProbono ? 'block' : 'none';
     probonoFields.style.display = isProbono ? 'block' : 'none';
     decideNote.style.display =
-      serviceSel.value === 'Not sure / Other — help me decide' ? 'block' : 'none';
+      chosen.includes('Not sure / Other — help me decide') ? 'block' : 'none';
     // Only require the pro-bono fields when that path is active.
     missionEl.required = isProbono;
     orgTypeInputs.forEach((r) => { r.required = isProbono; });
     sourceInput.value = (isProbono || fromGivingBack) ? 'giving-back' : '';
   }
-  serviceSel.addEventListener('change', syncInquiry);
+  serviceBoxes.forEach((b) => b.addEventListener('change', syncInquiry));
 
-  if (fromGivingBack) serviceSel.value = 'Pro bono support';
+  if (fromGivingBack) {
+    const probonoBox = serviceBoxes.find((b) => b.value === 'Pro bono support');
+    if (probonoBox) probonoBox.checked = true;
+  }
   syncInquiry();
   // -------------------------------------------------------------------------
 
@@ -200,7 +209,10 @@ export function renderForm(turnstileSiteKey: string, probono = false): string {
     e.preventDefault();
     statusEl.textContent = ''; statusEl.className = '';
     btn.disabled = true;
-    const data = Object.fromEntries(new FormData(form).entries());
+    const fd = new FormData(form);
+    const data = Object.fromEntries(fd.entries());
+    // Checkbox group: Object.fromEntries keeps only the last checked value.
+    data.service_area = fd.getAll('service_area');
     data.consent = form.consent.checked;
     const token = form.querySelector('[name="cf-turnstile-response"]');
     data['cf-turnstile-response'] = token ? token.value : '';

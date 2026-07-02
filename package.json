@@ -10,7 +10,7 @@
   "scripts": {
     "dev": "npm run dev --workspace apps/coritas",
     "deploy": "npm run deploy --workspace apps/coritas",
-    "typecheck": "tsc --build",
+    "typecheck": "tsc --noEmit -p packages/intake-core && tsc --noEmit -p apps/coritas",
     "test": "npm run test --workspaces --if-present"
   },
   "engines": {

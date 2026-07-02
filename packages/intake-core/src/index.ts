@@ -8,5 +8,6 @@ export * from "./slack.js";
 export * from "./asana.js";
 export * from "./anthropic.js";
 export * from "./crypto.js";
+export * from "./questionnaire.js";
 export * from "./time.js";
 export * from "./base-lead-agent.js";
