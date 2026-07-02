@@ -1,0 +1,14 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "coritas-intake-dev",
+      "runtimeExecutable": "bash",
+      "runtimeArgs": [
+        "-lc",
+        "export PATH=/opt/homebrew/opt/node@22/bin:$PATH && cd apps/coritas && npx wrangler dev --port ${PORT:-8799} --ip 127.0.0.1"
+      ],
+      "autoPort": true
+    }
+  ]
+}

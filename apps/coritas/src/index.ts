@@ -1,23 +1,44 @@
 // Coritas intake Worker. Routes:
-//   GET  /            → public intake form
-//   POST /api/submit  → Turnstile + validate + persist + dispatch LeadAgent
-//   POST /api/route   → Kate routes a lead to an owner (admin-token guarded)
-//   GET  /api/leads   → Kate's pipeline view (admin-token guarded)
+//   GET  /                     → public intake form
+//   POST /api/submit           → Turnstile + validate + persist + dispatch LeadAgent
+//   GET  /q/<slug>             → per-lead questionnaire (token-gated)
+//   POST /api/questionnaire    → save questionnaire answers (token-gated)
+//   POST /api/route            → Kate routes a lead to an owner (admin-token guarded)
+//   GET  /api/leads            → Kate's pipeline view (admin-token guarded)
 import {
   assignLead,
+  completeQuestionnaire,
   constantTimeEqual,
+  countCompleted,
+  createQuestionnaire,
   getLead,
+  getQuestionnaireByToken,
   insertLead,
+  notifySlack,
   recordEvent,
+  sendEmail,
   validateLead,
   verifyTurnstile,
+  type LeadRecord,
   type RawLeadSubmission,
 } from "@coritas/intake-core";
 import { getAgentByName } from "agents";
 import { runBackup } from "./backup.js";
+import {
+  questionnaireBySlug,
+  questionnairesForServiceArea,
+  type Questionnaire,
+} from "./config/questionnaires.js";
+import {
+  bookingEmail,
+  questionnaireEmail,
+  questionnaireReturnedEmail,
+  type QuestionnaireLink,
+} from "./customer-emails.js";
 import type { Env } from "./env.js";
 import { renderForm } from "./form.js";
 import { LeadAgent } from "./lead-agent.js";
+import { renderQuestionnairePage } from "./questionnaire-page.js";
 
 const json = (data: unknown, status = 200): Response =>
   new Response(JSON.stringify(data), {
@@ -48,6 +69,18 @@ export default {
 
     if (req.method === "POST" && url.pathname === "/api/submit") {
       return handleSubmit(req, env, ctx);
+    }
+
+    // Per-lead questionnaire (funnel steps 2-3). Access requires the exact
+    // lead id + token pair from the emailed link; anything else is a 404 so
+    // the URL space can't be probed for which leads exist.
+    const qMatch = /^\/q\/([a-z-]+)$/.exec(url.pathname);
+    if (req.method === "GET" && qMatch) {
+      return handleQuestionnairePage(qMatch[1]!, url, env);
+    }
+
+    if (req.method === "POST" && url.pathname === "/api/questionnaire") {
+      return handleQuestionnaireSubmit(req, env, ctx);
     }
 
     if (req.method === "POST" && url.pathname === "/api/route") {
@@ -131,7 +164,198 @@ async function handleSubmit(
     }),
   );
 
+  // 5) Funnel step 2: auto-email the customer their questionnaire link(s).
+  //    Pro bono requests stay a personal touch — no automated funnel.
+  if (result.value.source !== "giving-back") {
+    const origin = new URL(req.url).origin;
+    const lead = result.value;
+    ctx.waitUntil(
+      sendQuestionnaireLinks(env, id, lead.name, lead.email, lead.service_area, origin).catch(
+        async (err: unknown) => {
+          await recordEvent(env.DB, id, "error", `questionnaire email failed: ${String(err)}`);
+        },
+      ),
+    );
+  }
+
   return json({ ok: true, id });
+}
+
+/** Create token-gated questionnaire rows and email the links (customer email #1). */
+async function sendQuestionnaireLinks(
+  env: Env,
+  leadId: number,
+  name: string,
+  email: string,
+  serviceArea: string | null,
+  origin: string,
+): Promise<void> {
+  const questionnaires = questionnairesForServiceArea(serviceArea);
+  const links: QuestionnaireLink[] = [];
+  for (const q of questionnaires) {
+    const token = await createQuestionnaire(env.DB, leadId, q.key);
+    links.push({
+      questionnaire: q,
+      url: `${origin}/q/${q.slug}?lead=${leadId}&t=${token}`,
+    });
+  }
+
+  const msg = questionnaireEmail(name, links);
+  const sent = await sendEmail(env.RESEND_API_KEY, {
+    from: env.FROM_EMAIL,
+    to: email,
+    subject: msg.subject,
+    html: msg.html,
+    text: msg.text,
+    reply_to: env.KATE_EMAIL,
+  });
+  if (!sent.ok) throw new Error(sent.error ?? "resend failed");
+  await recordEvent(
+    env.DB,
+    leadId,
+    "questionnaire_sent",
+    questionnaires.map((q) => q.key).join(", "),
+  );
+}
+
+async function handleQuestionnairePage(
+  slug: string,
+  url: URL,
+  env: Env,
+): Promise<Response> {
+  const questionnaire = questionnaireBySlug(slug);
+  const leadId = Number(url.searchParams.get("lead"));
+  const token = url.searchParams.get("t") ?? "";
+  if (!questionnaire || !Number.isInteger(leadId) || leadId <= 0 || !token) {
+    return json({ error: "not found" }, 404);
+  }
+  const row = await getQuestionnaireByToken(env.DB, leadId, questionnaire.key, token);
+  if (!row) return json({ error: "not found" }, 404);
+
+  return new Response(
+    renderQuestionnairePage(questionnaire, leadId, token, row.status === "completed"),
+    { headers: { "Content-Type": "text/html; charset=utf-8" } },
+  );
+}
+
+async function handleQuestionnaireSubmit(
+  req: Request,
+  env: Env,
+  ctx: ExecutionContext,
+): Promise<Response> {
+  let body: { lead?: unknown; slug?: unknown; t?: unknown; answers?: unknown };
+  try {
+    body = (await req.json()) as typeof body;
+  } catch {
+    return json({ errors: ["invalid JSON body"] }, 400);
+  }
+
+  const leadId = Number(body.lead);
+  const slug = typeof body.slug === "string" ? body.slug : "";
+  const token = typeof body.t === "string" ? body.t : "";
+  const questionnaire = questionnaireBySlug(slug);
+  if (!questionnaire || !Number.isInteger(leadId) || leadId <= 0 || !token) {
+    return json({ errors: ["not found"] }, 404);
+  }
+  const row = await getQuestionnaireByToken(env.DB, leadId, questionnaire.key, token);
+  if (!row) return json({ errors: ["not found"] }, 404);
+  if (row.status === "completed") return json({ ok: true, already: true });
+
+  // Keep only answers to questions this questionnaire actually asks; enforce
+  // required ones server-side (the client's `required` is advisory only).
+  const rawAnswers = (body.answers ?? {}) as Record<string, unknown>;
+  const answers: Record<string, string> = {};
+  for (const q of questionnaire.questions) {
+    const v = rawAnswers[q.id];
+    if (typeof v === "string" && v.trim()) answers[q.id] = v.trim().slice(0, 5000);
+  }
+  const missing = questionnaire.questions.filter((q) => q.required && !answers[q.id]);
+  if (missing.length > 0) {
+    return json({ errors: missing.map((q) => `"${q.label}" is required`) }, 422);
+  }
+
+  const updated = await completeQuestionnaire(env.DB, row.id, JSON.stringify(answers));
+  if (!updated) return json({ ok: true, already: true });
+  await recordEvent(env.DB, leadId, "questionnaire_completed", questionnaire.key);
+
+  const lead = await getLead(env.DB, leadId);
+  if (lead) {
+    ctx.waitUntil(
+      afterQuestionnaire(env, lead, questionnaire, answers).catch(async (err: unknown) => {
+        await recordEvent(env.DB, leadId, "error", `post-questionnaire failed: ${String(err)}`);
+      }),
+    );
+  }
+  return json({ ok: true });
+}
+
+/** Funnel after a questionnaire lands: notify Kate, then (once) email the booking link. */
+async function afterQuestionnaire(
+  env: Env,
+  lead: LeadRecord,
+  questionnaire: Questionnaire,
+  answers: Record<string, string>,
+): Promise<void> {
+  const note = questionnaireReturnedEmail(lead.name, lead.email, questionnaire, answers);
+  await sendEmail(env.RESEND_API_KEY, {
+    from: env.FROM_EMAIL,
+    to: env.KATE_EMAIL,
+    subject: note.subject,
+    html: note.html,
+    text: note.text,
+    reply_to: lead.email,
+  });
+
+  // Funnel step 4 — at most once per lead, even if several questionnaires land
+  // concurrently: the UPDATE below is an atomic claim on the lead row.
+  const claim = await env.DB.prepare(
+    `UPDATE leads SET booking_email_at = datetime('now')
+     WHERE id = ? AND booking_email_at IS NULL`,
+  )
+    .bind(lead.id)
+    .run();
+  if ((claim.meta.changes ?? 0) === 0) return; // someone else already sent it
+
+  const bookingUrl = env.SCHEDULER_URL?.trim() || null;
+  const msg = bookingEmail(lead.name, bookingUrl);
+  const sent = await sendEmail(env.RESEND_API_KEY, {
+    from: env.FROM_EMAIL,
+    to: lead.email,
+    subject: msg.subject,
+    html: msg.html,
+    text: msg.text,
+    reply_to: env.KATE_EMAIL,
+  });
+
+  if (!sent.ok) {
+    // Release the claim so a later questionnaire completion (or retry) can
+    // send it — otherwise one Resend hiccup silently eats the booking email.
+    await env.DB.prepare(
+      `UPDATE leads SET booking_email_at = NULL WHERE id = ?`,
+    )
+      .bind(lead.id)
+      .run();
+    await recordEvent(
+      env.DB,
+      lead.id,
+      "error",
+      `booking email failed (claim released): ${sent.error ?? "unknown"}`,
+    );
+    if (env.SLACK_WEBHOOK_URL) {
+      await notifySlack(
+        env.SLACK_WEBHOOK_URL,
+        `⚠️ Booking email to lead #${lead.id} (${lead.name} <${lead.email}>) FAILED — they finished the questionnaire but got no scheduling link. Error: ${sent.error ?? "unknown"}`,
+      ).catch(() => {});
+    }
+    return;
+  }
+
+  await recordEvent(
+    env.DB,
+    lead.id,
+    "booking_email_sent",
+    bookingUrl ? "with booking link" : "fallback copy — SCHEDULER_URL not set",
+  );
 }
 
 async function handleRoute(req: Request, env: Env): Promise<Response> {

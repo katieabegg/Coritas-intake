@@ -18,6 +18,22 @@ function str(v: unknown, max = 2000): string | null {
   return trimmed.slice(0, max);
 }
 
+// service_area may arrive as a single string (legacy select) or an array
+// (multi-select checkboxes). Normalize to a deduped, comma-joined string so
+// the D1 column and everything downstream keep a single shape. Option labels
+// contain no commas, so the join is losslessly splittable.
+function strList(v: unknown, maxEach = 200, maxItems = 12): string | null {
+  if (!Array.isArray(v)) return str(v, maxEach);
+  const items = v
+    .filter((x): x is string => typeof x === "string")
+    .map((x) => x.trim())
+    .filter(Boolean)
+    .slice(0, maxItems)
+    .map((x) => x.slice(0, maxEach));
+  const deduped = [...new Set(items)];
+  return deduped.length > 0 ? deduped.join(", ") : null;
+}
+
 /** Validate and normalize a raw form submission into a LeadInput. */
 export function validateLead(raw: RawLeadSubmission): ValidationResult {
   const errors: string[] = [];
@@ -35,14 +51,15 @@ export function validateLead(raw: RawLeadSubmission): ValidationResult {
 
   if (errors.length > 0) return { ok: false, errors };
 
-  const service_area = str(raw.service_area, 200);
+  const service_area = strList(raw.service_area);
 
   // A submission is "pro bono" if they either picked the Pro bono service option
-  // or arrived via the Giving Back CTA (which posts source=giving-back). Either
-  // way we tag it `giving-back` so Kate can filter the inbox for it.
+  // (possibly among several) or arrived via the Giving Back CTA (which posts
+  // source=giving-back). Either way we tag it `giving-back` for Kate's inbox.
   const rawSource = str(raw.source, 50);
+  const selectedServices = (service_area ?? "").split(",").map((s) => s.trim());
   const isProbono =
-    service_area === PROBONO_SERVICE || rawSource === GIVING_BACK;
+    selectedServices.includes(PROBONO_SERVICE) || rawSource === GIVING_BACK;
   const source = isProbono ? GIVING_BACK : rawSource;
 
   // org_type only carries meaning on the pro bono path; constrain to known tokens.
